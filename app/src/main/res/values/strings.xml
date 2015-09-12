@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Future Nav</string>
+    <string name="title_activity_main">Search For School</string>
+    <string name="title_activity_school_detail">School Information</string>
+    <string name="autocomplete_hint">Enter place name or address</string>
+    <string name="school_msg_remove">School removed from favorite list!</string>
+    <string name="loaddata_msg_failed">Unable to load school data from code.org. Please check connection!!!</string>
+    <string name="loaddata_msg_done">Load school data completed.</string>
+    <string name="googleapi_msg_error">"Could not connect to Google API Client: Error "</string>
+    <string name="school_msg_add">School added to your favorite list!</string>
+    <string name="cd_powered_by_google">Powered by Google</string>
+    <string name="cd_actionbutton">Action Button</string>
+    <string name="cd_fab_add_remove">add or remove from favorite list</string>
+    <string name="schoollabel_website">Website:</string>
+    <string name="schoollabel_level">Levels:</string>
+    <string name="schoollabel_format">Format:</string>
+    <string name="schoollabel_gender">Gender:</string>
+    <string name="schoollabel_language">Language:</string>
+    <string name="schoollabel_online">Online only:</string>
+    <string name="schoollabel_nostudent">No. Students:</string>
+    <string name="schoollabel_contactnumber">Contact:</string>
+    <string name="schoollabel_email">Email:</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="empty_saved_school">No school saved</string>
+    <string name="activity_trans">activity_trans</string>
+    <string name="empty_data_msg">No school found in this area</string>
+</resources>

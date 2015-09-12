@@ -7,9 +7,12 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.preference.PreferenceManager;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.futurenav.cuong.futurenav.MyApplication;
 import com.futurenav.cuong.futurenav.Util;
 import com.futurenav.cuong.futurenav.data.DBContract;
 import com.futurenav.cuong.futurenav.model.CodeOrg;
@@ -52,16 +55,19 @@ public class LoadSchoolIntentService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        sharedPref = getSharedPreferences(APP_PREF, Context.MODE_PRIVATE);
+
+        sharedPref = PreferenceManager.getDefaultSharedPreferences(this); //getSharedPreferences(APP_PREF, Context.MODE_PRIVATE);
         //read pref check if this is first time running app then load data into sqlite from code.org
         String initialLoad = sharedPref.getString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_NOT_STARTED);
 
         Log.d(LOG_TAG, "Initial Load Pref: " + initialLoad);
 
-        if (Util.INITIAL_LOAD_NOT_STARTED.equals(initialLoad)) {
+        if (Util.INITIAL_LOAD_NOT_STARTED.equals(initialLoad) ||
+                Util.INITIAL_LOAD_FAILED.equals(initialLoad)) {
 
             //lock it
-            SharedPreferences.Editor editor = sharedPref.edit();
+            Log.d(LOG_TAG, "lock pref: ");
+            final SharedPreferences.Editor editor = sharedPref.edit();
             editor.putString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_INPROGRESS);
             editor.commit();
 
@@ -82,40 +88,10 @@ public class LoadSchoolIntentService extends IntentService {
 
                     Vector<ContentValues> cVVector = new Vector<ContentValues>(schoolDirectory.size());
 
-                    int i = 0;
                     for (School s : schoolDirectory.values()) {
 
-                        ContentValues schoolValue = new ContentValues();
+                        ContentValues schoolValue = Util.convertFromSchoolToCV(s);
 
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_SCHOOL_NAME, s.getName());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_WEBSITE, s.getWebsite());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_LEVEL, TextUtils.join(Util.TEXT_SPLITTER, s.getLevels())); //list of string to string comma seperated
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_FORMAT, s.getFormat());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_FORMAT_DESC, s.getFormat_description());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_GENDER, s.getGender());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_DESC, s.getDescription());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_LANGUAGE, TextUtils.join(Util.TEXT_SPLITTER, s.getLanguages()));
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_SCHOOL_TYPE, s.getMoney_needed());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_ONLINE_ONLY, s.getOnline_only());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_NO_STUDENT, s.getNumber_of_students());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_CONTACT_NAME, s.getContact_name());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_CONTACT_NUMBER, s.getContact_number());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_CONTACT_EMAIL, s.getContact_email());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_LAT, s.getLatitude());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_LONGITUDE, s.getLongitude());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_STREET, s.getStreet());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_CITY, s.getCity());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_STATE, s.getState());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_ZIP, s.getZip());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_PUBLISHED, s.getPublished());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_UPDATED_AT, s.getUpdated_at());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_COUNTRY, s.getCountry());
-                        schoolValue.put(DBContract.SchoolEntry.COLUMN_SOURCE, s.getSource());
-
-                        //test
-                        if (i < 2)
-                            getContentResolver().insert(DBContract.FavoriteEntry.CONTENT_URI, schoolValue);
-                        i++;
                         cVVector.add(schoolValue);
 
                     }
@@ -127,10 +103,18 @@ public class LoadSchoolIntentService extends IntentService {
                         Log.d(LOG_TAG, "rows inserted: " + cVVector.size());
 
                     }
+
+                    Log.d(LOG_TAG, "pref done: ");
+                    editor.putString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_DONE);
+                    editor.commit();
                 }
 
                 @Override
                 public void failure(RetrofitError retrofitError) {
+
+                    Log.d(LOG_TAG, "pref failed: ");
+                    editor.putString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_FAILED);
+                    editor.commit();
 
                     if (retrofitError.getResponse() != null) {
                         Log.e(LOG_TAG, "Error getting school from code.org: " + retrofitError.getCause().toString());
@@ -138,9 +122,19 @@ public class LoadSchoolIntentService extends IntentService {
 
                 }
             });
-            editor.putString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_DONE);
-            editor.commit();
+
         }
+
+        loadFav();
+
+    }
+
+
+    private void loadFav(){
+
+        Cursor c = getContentResolver().query(DBContract.FavoriteEntry.CONTENT_URI, null, null, null, null);
+        Log.d(LOG_TAG, "Fav School count: " + c.getCount());
+        ((MyApplication) getApplication()).setSchoolListFromCursor(c);
     }
 
 }

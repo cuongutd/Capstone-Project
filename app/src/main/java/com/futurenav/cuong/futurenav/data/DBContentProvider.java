@@ -6,7 +6,9 @@ import android.content.UriMatcher;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
+import android.provider.BaseColumns;
 import android.text.TextUtils;
+import android.util.Log;
 
 /**
  * Created by Cuong on 8/26/2015.
@@ -18,9 +20,37 @@ public class DBContentProvider extends ContentProvider {
     //URL matcher
     //app calls provider passing in URI, needs to know what action the uri going to do
     public static final int SCHOOL = 100;
-    public static final int SCHOOL_WITH_ZIPCODE = 101;
-    public static final int SCHOOL_WITH_ZIPCODE_WEBSITE = 102;
+    public static final int SCHOOL_WITH_QUERY_PARAMS = 101;
     public static final int FAVORITE = 200;
+
+
+    private String[] favColumns = {
+    DBContract.FavoriteEntry.COLUMN_SCHOOL_NAME,
+    DBContract.FavoriteEntry.COLUMN_WEBSITE,
+    DBContract.FavoriteEntry.COLUMN_LEVEL,
+    DBContract.FavoriteEntry.COLUMN_FORMAT,
+    DBContract.FavoriteEntry.COLUMN_FORMAT_DESC,
+    DBContract.FavoriteEntry.COLUMN_GENDER,
+    DBContract.FavoriteEntry.COLUMN_DESC,
+    DBContract.FavoriteEntry.COLUMN_LANGUAGE,
+    DBContract.FavoriteEntry.COLUMN_SCHOOL_TYPE,
+    DBContract.FavoriteEntry.COLUMN_ONLINE_ONLY,
+    DBContract.FavoriteEntry.COLUMN_NO_STUDENT,
+    DBContract.FavoriteEntry.COLUMN_CONTACT_NAME,
+    DBContract.FavoriteEntry.COLUMN_CONTACT_NUMBER,
+    DBContract.FavoriteEntry.COLUMN_CONTACT_EMAIL,
+    DBContract.FavoriteEntry.COLUMN_LAT,
+    DBContract.FavoriteEntry.COLUMN_LONGITUDE,
+    DBContract.FavoriteEntry.COLUMN_STREET,
+    DBContract.FavoriteEntry.COLUMN_CITY,
+    DBContract.FavoriteEntry.COLUMN_STATE,
+    DBContract.FavoriteEntry.COLUMN_ZIP,
+    DBContract.FavoriteEntry.COLUMN_PUBLISHED,
+    DBContract.FavoriteEntry.COLUMN_UPDATED_AT,
+    DBContract.FavoriteEntry.COLUMN_COUNTRY,
+    DBContract.FavoriteEntry.COLUMN_SOURCE,
+            BaseColumns._ID
+    };
 
     private UriMatcher mUriMatcher = buildUriMatcher();
 
@@ -31,8 +61,7 @@ public class DBContentProvider extends ContentProvider {
 
         // For each type of URI you want to add, create a corresponding code.
         matcher.addURI(authority, DBContract.PATH_SCHOOL, SCHOOL);
-        matcher.addURI(authority, DBContract.PATH_SCHOOL + "/*", SCHOOL_WITH_ZIPCODE);
-        matcher.addURI(authority, DBContract.PATH_SCHOOL + "/*/#", SCHOOL_WITH_ZIPCODE_WEBSITE);
+        matcher.addURI(authority, DBContract.PATH_SCHOOL + "/*/", SCHOOL_WITH_QUERY_PARAMS);
 
         matcher.addURI(authority, DBContract.PATH_FAVORITE, FAVORITE);
 
@@ -40,23 +69,40 @@ public class DBContentProvider extends ContentProvider {
     }
 
     private static final String ZIPCODE_SELECTION = DBContract.SchoolEntry.COLUMN_ZIP + " = ? ";
-    private static final String ZIPCODE_WEBSITE_SELECTION = DBContract.SchoolEntry.COLUMN_ZIP + " = ? AND " + DBContract.SchoolEntry.COLUMN_WEBSITE + " = ? ";
+    private static final String WEBSITE_SELECTION = DBContract.SchoolEntry.COLUMN_WEBSITE + " = ?";
+    private static final String CORD_SELECTION = DBContract.SchoolEntry.COLUMN_LAT + " >= ? AND " +
+            DBContract.SchoolEntry.COLUMN_LAT + " <= ? AND " +
+            DBContract.SchoolEntry.COLUMN_LONGITUDE + " >= ? AND " +
+            DBContract.SchoolEntry.COLUMN_LONGITUDE + " <= ?";
 
     private Cursor buildSchoolCursor(Uri uri, String[] projection, String sortOrder) {
 
         String zip = DBContract.SchoolEntry.getZip(uri);
         String website = DBContract.SchoolEntry.getWebsite(uri);
-        String[] selectionArgs;
-        String selection;
+        String lat = DBContract.SchoolEntry.getLat(uri);
+        String lon = DBContract.SchoolEntry.getLong(uri);
 
-        if (TextUtils.isEmpty(website)) {
+        String[] selectionArgs = null;
+        String selection = null;
+
+        if (!TextUtils.isEmpty(zip)) {
             selectionArgs = new String[]{zip};
             selection = ZIPCODE_SELECTION;
-        } else {
-            selectionArgs = new String[]{zip, website};
-            selection = ZIPCODE_WEBSITE_SELECTION;
-
         }
+        if (!TextUtils.isEmpty(website)) {
+            selectionArgs = new String[]{website};
+            selection = WEBSITE_SELECTION;
+        }
+
+        if (!TextUtils.isEmpty(lat)) {
+            double dLat = Double.valueOf(lat);
+            double dLong = Double.valueOf(lon);
+
+
+            selectionArgs = new String[]{String.valueOf(dLat - 0.1d), String.valueOf(dLat + 0.1d), String.valueOf(dLong - 0.1d), String.valueOf(dLong + 0.1d)};
+            selection = CORD_SELECTION;
+        }
+
         return mDBHelper.getReadableDatabase().query(
                 DBContract.SchoolEntry.TABLE_NAME,
                 projection,
@@ -80,9 +126,14 @@ public class DBContentProvider extends ContentProvider {
 
         Cursor retCursor = null;
 
+        Log.d("URI: ", uri.toString());
+
         int match = mUriMatcher.match(uri);
         switch (match) {
             case FAVORITE:
+                Log.d("Match: ", " favorite");
+                if (projection == null)
+                    projection = favColumns;
                 retCursor = mDBHelper.getReadableDatabase().query(
                         DBContract.FavoriteEntry.TABLE_NAME,
                         projection,
@@ -93,6 +144,7 @@ public class DBContentProvider extends ContentProvider {
                         sortOrder);
                 break;
             case SCHOOL:
+                Log.d("Match: ", " SCHOOL");
                 retCursor = mDBHelper.getReadableDatabase().query(
                         DBContract.SchoolEntry.TABLE_NAME,
                         projection,
@@ -102,10 +154,8 @@ public class DBContentProvider extends ContentProvider {
                         null,
                         sortOrder);
                 break;
-            case SCHOOL_WITH_ZIPCODE:
-                retCursor = buildSchoolCursor(uri, projection, sortOrder);
-                break;
-            case SCHOOL_WITH_ZIPCODE_WEBSITE:
+            case SCHOOL_WITH_QUERY_PARAMS:
+                Log.d("Match: ", " SCHOOL_WITH_QUERY_PARAMS");
                 retCursor = buildSchoolCursor(uri, projection, sortOrder);
                 break;
             default:
@@ -124,10 +174,8 @@ public class DBContentProvider extends ContentProvider {
                 return DBContract.FavoriteEntry.CONTENT_TYPE;
             case SCHOOL:
                 return DBContract.SchoolEntry.CONTENT_TYPE;
-            case SCHOOL_WITH_ZIPCODE:
+            case SCHOOL_WITH_QUERY_PARAMS:
                 return DBContract.SchoolEntry.CONTENT_TYPE;
-            case SCHOOL_WITH_ZIPCODE_WEBSITE:
-                return DBContract.SchoolEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new UnsupportedOperationException("Unknown uri: " + uri);
         }

@@ -19,14 +19,17 @@ import java.util.List;
 
 public class School implements Parcelable {
 
+    private String _id;
     private String name;
     private String website;
     private List<String> levels;
+    private String sLevels;
     private String format;//": "In School",
     private String format_description;//": "Daily programming course",
     private String gender;//": "Both",
     private String description;//": "Introduction to Java Programming",
     private List<String> languages;//
+    private String sLanguages;
     private String money_needed;//": true,
     private String online_only;//": false,
     private String number_of_students;//": null,
@@ -43,6 +46,34 @@ public class School implements Parcelable {
     private String updated_at;//": "2013-02-26T13:31:23Z",
     private String country;//": "United States",
     private String source;//": "user"
+
+    public School(){
+
+    }
+
+    public String get_id() {
+        return _id;
+    }
+
+    public void set_id(String _id) {
+        this._id = _id;
+    }
+
+    public String getsLanguages() {
+        return sLanguages;
+    }
+
+    public void setsLanguages(String sLanguages) {
+        this.sLanguages = sLanguages;
+    }
+
+    public String getsLevels() {
+        return sLevels;
+    }
+
+    public void setsLevels(String sLevels) {
+        this.sLevels = sLevels;
+    }
 
     public String getName() {
         return name;
@@ -237,6 +268,7 @@ public class School implements Parcelable {
     }
 
     protected School(Parcel in) {
+        _id = in.readString();
         name = in.readString();
         website = in.readString();
         if (in.readByte() == 0x01) {
@@ -245,6 +277,7 @@ public class School implements Parcelable {
         } else {
             levels = null;
         }
+        sLevels = in.readString();
         format = in.readString();
         format_description = in.readString();
         gender = in.readString();
@@ -255,6 +288,7 @@ public class School implements Parcelable {
         } else {
             languages = null;
         }
+        sLanguages = in.readString();
         money_needed = in.readString();
         online_only = in.readString();
         number_of_students = in.readString();
@@ -280,6 +314,7 @@ public class School implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(_id);
         dest.writeString(name);
         dest.writeString(website);
         if (levels == null) {
@@ -288,6 +323,7 @@ public class School implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeList(levels);
         }
+        dest.writeString(sLevels);
         dest.writeString(format);
         dest.writeString(format_description);
         dest.writeString(gender);
@@ -298,6 +334,7 @@ public class School implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeList(languages);
         }
+        dest.writeString(sLanguages);
         dest.writeString(money_needed);
         dest.writeString(online_only);
         dest.writeString(number_of_students);
@@ -328,41 +365,5 @@ public class School implements Parcelable {
             return new School[size];
         }
     };
-
-    public School(Cursor mCursor){
-        name = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_SCHOOL_NAME));
-        website = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_WEBSITE));
-
-        String levelText = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_LEVEL));
-        if (TextUtils.isEmpty(levelText))
-            levels = Arrays.asList(TextUtils.split(levelText, Util.TEXT_SPLITTER));
-
-        format = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_FORMAT));
-        format_description = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_FORMAT_DESC));
-        gender = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_GENDER));
-        description = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_DESC));
-
-        String langs = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_LANGUAGE));
-        if (TextUtils.isEmpty(langs))
-            languages = Arrays.asList(TextUtils.split(langs, Util.TEXT_SPLITTER));
-
-        money_needed = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_SCHOOL_TYPE));
-        online_only = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_ONLINE_ONLY));
-        number_of_students = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_NO_STUDENT));
-        contact_name = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_CONTACT_NAME));
-        contact_number = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_CONTACT_NUMBER));
-        contact_email = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_CONTACT_EMAIL));
-        latitude = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_LAT));
-        longitude = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_LONGITUDE));
-        street = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_STREET));
-        city = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_CITY));
-        state = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_STATE));
-        zip = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_ZIP));
-        published = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_PUBLISHED));
-        updated_at = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_UPDATED_AT));
-        country = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_COUNTRY));
-        source = mCursor.getString(mCursor.getColumnIndex(DBContract.SchoolEntry.COLUMN_SOURCE));
-
-    }
 
 }

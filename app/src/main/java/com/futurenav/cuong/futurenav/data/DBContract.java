@@ -14,6 +14,11 @@ public class DBContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_SCHOOL = "school";
     public static final String PATH_FAVORITE = "favorite";
+    public static final String QUERY_PARAM_KEY_SCHOOL_ZIPCODE = "zipcode";
+    public static final String QUERY_PARAM_KEY_SCHOOL_WEBSITE = "website";
+    public static final String QUERY_PARAM_KEY_SCHOOL_CORD_LAT = "lat";
+    public static final String QUERY_PARAM_KEY_SCHOOL_CORD_LONG = "lon";
+
 
     public static final class SchoolEntry implements BaseColumns {
 
@@ -57,25 +62,32 @@ public class DBContract {
             return ContentUris.withAppendedId(CONTENT_URI, id);
         }
         public static Uri buildSchoolUriWithZip(String zip) {
-            return CONTENT_URI.buildUpon().appendPath(zip).build();
+            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAM_KEY_SCHOOL_ZIPCODE, zip).build();
         }
-        public static Uri buildSchoolUriWithZipWebsite(String zip, String website) {
-            return CONTENT_URI.buildUpon().appendPath(zip).appendPath(website).build();
+
+        public static Uri buildSchoolUriWithLatLong(Double lat, Double lon) {
+            return CONTENT_URI.buildUpon().appendPath("QUERY").appendQueryParameter(QUERY_PARAM_KEY_SCHOOL_CORD_LAT, lat.toString())
+                    .appendQueryParameter(QUERY_PARAM_KEY_SCHOOL_CORD_LONG, lon.toString()).build();
+        }
+        public static Uri buildSchoolUriWithWebsite(String website) {
+            return CONTENT_URI.buildUpon().appendQueryParameter(QUERY_PARAM_KEY_SCHOOL_WEBSITE, website).build();
         }
 
         public static String getZip(Uri uri){
-            return uri.getPathSegments().get(1);
+            return uri.getQueryParameter(QUERY_PARAM_KEY_SCHOOL_ZIPCODE);
         }
 
         public static String getWebsite(Uri uri){
-            try{
-                String website = uri.getPathSegments().get(2);
-                return website;
-            }catch(IndexOutOfBoundsException e){
-                return null;
-            }
+            return uri.getQueryParameter(QUERY_PARAM_KEY_SCHOOL_WEBSITE);
 
         }
+        public static String getLat(Uri uri){
+            return uri.getQueryParameter(QUERY_PARAM_KEY_SCHOOL_CORD_LAT);
+        }
+        public static String getLong(Uri uri){
+            return uri.getQueryParameter(QUERY_PARAM_KEY_SCHOOL_CORD_LONG);
+        }
+
     }
 
     public static final class FavoriteEntry implements BaseColumns {
