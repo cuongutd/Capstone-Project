@@ -1,7 +1,5 @@
 package com.futurenav.cuong.futurenav;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -23,7 +21,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewAnimationUtils;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AutoCompleteTextView;
@@ -59,7 +56,7 @@ import java.util.Map;
  */
 public class SchoolActivityFragment extends MyFragment
         implements LoaderManager.LoaderCallbacks<Cursor>, GoogleApiClient.OnConnectionFailedListener, GoogleMap.OnMarkerClickListener
-        , SharedPreferences.OnSharedPreferenceChangeListener{
+        , SharedPreferences.OnSharedPreferenceChangeListener {
 
     private static final String LOG_TAG = SchoolActivityFragment.class.getSimpleName();
 
@@ -97,7 +94,7 @@ public class SchoolActivityFragment extends MyFragment
 
         super.onCreateView(inflater, container, savedInstanceState);
 
-        if (savedInstanceState != null){
+        if (savedInstanceState != null) {
             Log.d(LOG_TAG, "saved instant");
             mSearchMode = savedInstanceState.getBoolean(Util.SAVE_INSTANT_SEARCH_MODE, false);
             mSearchLat = savedInstanceState.getDouble(Util.SAVE_INSTANT_LAT);
@@ -147,6 +144,7 @@ public class SchoolActivityFragment extends MyFragment
 
     private void initSearchTextview(View root) {
 
+        //from google place api sample PlaceComplete
         mGoogleLogo = (ImageView) root.findViewById(R.id.powerbygoogle);
 
         mGoogleApiClient = new GoogleApiClient.Builder(getActivity())
@@ -154,21 +152,10 @@ public class SchoolActivityFragment extends MyFragment
                 .addApi(Places.GEO_DATA_API)
                 .build();
 
-
         // Retrieve the AutoCompleteTextView that will display Place suggestions.
         mAutocompleteView = (AutoCompleteTextView) root.findViewById(R.id.autocomplete_places);
         // Register a listener that receives callbacks when a suggestion has been selected
         mAutocompleteView.setOnItemClickListener(mAutocompleteClickListener);
-
-//        mAutocompleteView.setOnTouchListener(new RightDrawableOnTouchListener(mAutocompleteView) {
-//            @Override
-//            public boolean onDrawableTouch(final MotionEvent event) {
-//                mAutocompleteView.setText("");
-//                return true;
-//            }
-//        });
-
-
 
         // Set up the adapter that will retrieve suggestions from the Places Geo Data API that cover
         // the entire world.
@@ -228,6 +215,7 @@ public class SchoolActivityFragment extends MyFragment
 
                     @Override
                     public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                        //only enable swipe mode on favorite list, not search result
                         if (mSearchMode)
                             return 0;
                         else
@@ -285,7 +273,7 @@ public class SchoolActivityFragment extends MyFragment
                     mSearchMode = false;//favorite mode
                     mFAB.setImageResource(android.R.drawable.ic_menu_search);
                     //mAutocompleteView.setVisibility(View.GONE);
-                    disableSearchText(mAutocompleteView);
+                    Util.disableView(mAutocompleteView);
                     mGoogleLogo.setVisibility(View.GONE);
                     //requery favorite list, which will remark the map
                     getLoaderManager().restartLoader(SEARCH_LOADER, null, SchoolActivityFragment.this);
@@ -294,7 +282,7 @@ public class SchoolActivityFragment extends MyFragment
                     mSearchMode = true;
                     mFAB.setImageResource(R.drawable.bookmark);
                     //mAutocompleteView.setVisibility(View.VISIBLE);
-                    enableSearchText(mAutocompleteView);
+                    Util.enableView(mAutocompleteView);
                     mGoogleLogo.setVisibility(View.VISIBLE);
                     ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.app_name) + " - Search for School");
                     if (mSearchLat != null)
@@ -308,70 +296,17 @@ public class SchoolActivityFragment extends MyFragment
         });
     }
 
-    private void enableSearchText(View myView) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-
-            // get the center for the clipping circle
-            int cx = myView.getWidth() / 2;
-            int cy = myView.getHeight() / 2;
-
-            // get the final radius for the clipping circle
-            int finalRadius = Math.max(myView.getWidth(), myView.getHeight());
-
-            // create the animator for this view (the start radius is zero)
-            Animator anim =
-                    null;
-            anim = ViewAnimationUtils.createCircularReveal(myView, cx, cy, 0, finalRadius);
-
-            // make the view visible and start the animation
-            myView.setVisibility(View.VISIBLE);
-            anim.start();
-        } else {
-            myView.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void disableSearchText(final View myView) {
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-
-            int cx = myView.getWidth() / 2;
-            int cy = myView.getHeight() / 2;
-
-            // get the initial radius for the clipping circle
-            int initialRadius = myView.getWidth();
-
-            // create the animation (the final radius is zero)
-            Animator anim =
-                    ViewAnimationUtils.createCircularReveal(myView, cx, cy, initialRadius, 0);
-
-            // make the view invisible when the animation is done
-            anim.addListener(new AnimatorListenerAdapter() {
-                @Override
-                public void onAnimationEnd(Animator animation) {
-                    super.onAnimationEnd(animation);
-                    myView.setVisibility(View.GONE);
-                }
-            });
-
-            // start the animation
-            anim.start();
-        } else {
-            myView.setVisibility(View.GONE);
-        }
-    }
-
-
     private void searchMyLocation() {
         LocationManager locMan = (LocationManager) getActivity().getSystemService(Context.LOCATION_SERVICE);
         Criteria crit = new Criteria();
         Location loc = locMan.getLastKnownLocation(locMan.getBestProvider(crit, false));
 
         //search will be kicked off when resume
-        if (loc != null){
+        if (loc != null) {
             mSearchLat = loc.getLatitude();
             mSearchLong = loc.getLongitude();
             getLoaderManager().restartLoader(SEARCH_LOADER, null, SchoolActivityFragment.this);
-        }else{
+        } else {
             Log.d(LOG_TAG, "Could not locate phone last location");
         }
 //
@@ -386,11 +321,11 @@ public class SchoolActivityFragment extends MyFragment
 
     }
 
-    private void setUpMap(Cursor data) {
+    private void showSchoolsOnMap(Cursor data) {
 
         mMapMarkers = new HashMap<Integer, Marker>();
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        if (mMap != null){
+        if (mMap != null) {
             mMap.clear();
             if (data != null && data.moveToFirst()) {
                 do {
@@ -430,15 +365,14 @@ public class SchoolActivityFragment extends MyFragment
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         Log.d(LOG_TAG, "onCreateLoader");
-        if (mSearchMode){
+        if (mSearchMode) {
             return new CursorLoader(getActivity(),
                     DBContract.SchoolEntry.buildSchoolUriWithLatLong(mSearchLat, mSearchLong),
                     null,
                     null,
                     null,
                     DBContract.SchoolEntry.COLUMN_SCHOOL_NAME + " ASC");
-        }
-        else {
+        } else {
             return new CursorLoader(getActivity(),
                     DBContract.FavoriteEntry.CONTENT_URI,
                     null,
@@ -456,7 +390,7 @@ public class SchoolActivityFragment extends MyFragment
 
         updateEmptyView();
 
-        setUpMap(data);
+        showSchoolsOnMap(data);
 
     }
 
@@ -567,7 +501,7 @@ public class SchoolActivityFragment extends MyFragment
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         //A better way would be intentservice sending local broadcast message
         Log.d(LOG_TAG, "onSharedPreferenceChanged: " + sharedPreferences.getString(Util.INITIAL_LOAD_PREF_KEY, "NA"));
-        if (Util.INITIAL_LOAD_PREF_KEY.equals(key)){
+        if (Util.INITIAL_LOAD_PREF_KEY.equals(key)) {
 
             String loadStatus = sharedPreferences.getString(Util.INITIAL_LOAD_PREF_KEY, Util.INITIAL_LOAD_NOT_STARTED);
             switch (loadStatus) {
@@ -594,7 +528,7 @@ public class SchoolActivityFragment extends MyFragment
     public void onSaveInstanceState(Bundle outState) {
 
         outState.putBoolean(Util.SAVE_INSTANT_SEARCH_MODE, mSearchMode);
-        if (mSearchLat != null && mSearchLong != null){
+        if (mSearchLat != null && mSearchLong != null) {
             outState.putDouble(Util.SAVE_INSTANT_LAT, mSearchLat);
             outState.putDouble(Util.SAVE_INSTANT_LONG, mSearchLong);
         }

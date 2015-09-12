@@ -132,9 +132,13 @@ public class LoadSchoolIntentService extends IntentService {
 
     private void loadFav(){
 
-        Cursor c = getContentResolver().query(DBContract.FavoriteEntry.CONTENT_URI, null, null, null, null);
-        Log.d(LOG_TAG, "Fav School count: " + c.getCount());
-        ((MyApplication) getApplication()).setSchoolListFromCursor(c);
+        if (((MyApplication) getApplication()).getmFavoriteSchoolList().size() == 0) {//to avoid loading multiple time
+
+            Cursor c = getContentResolver().query(DBContract.FavoriteEntry.CONTENT_URI, null, null, null, null);
+            Log.d(LOG_TAG, "Fav School count: " + c.getCount());
+            ((MyApplication) getApplication()).setSchoolListFromCursor(c);
+
+        }
     }
 
 }

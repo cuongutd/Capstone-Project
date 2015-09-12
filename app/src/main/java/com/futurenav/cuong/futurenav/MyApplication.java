@@ -10,20 +10,17 @@ import java.util.Map;
 
 /**
  * Created by Cuong on 8/28/2015.
+ * Contains list of favorite schools
  */
 public class MyApplication extends Application {
+
+    private Map<String, School> mFavoriteSchoolList;
 
     public Map<String, School> getmFavoriteSchoolList() {
         if (mFavoriteSchoolList == null)
             mFavoriteSchoolList = new HashMap<String, School>();
         return mFavoriteSchoolList;
     }
-
-    public void setmFavoriteSchoolList(Map<String, School> mFavoriteSchoolList) {
-        this.mFavoriteSchoolList = mFavoriteSchoolList;
-    }
-
-    private Map<String, School> mFavoriteSchoolList;
 
     public void setSchoolListFromCursor(Cursor c){
         if (c.moveToFirst())

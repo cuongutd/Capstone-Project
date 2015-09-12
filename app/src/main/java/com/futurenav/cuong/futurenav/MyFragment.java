@@ -2,6 +2,7 @@ package com.futurenav.cuong.futurenav;
 
 /**
  * Created by Cuong on 9/10/2015.
+ * Debugging codes to track fragment lifecycle. Other fragment classes extend this base class
  */
 import android.app.Activity;
 import android.os.Bundle;
@@ -14,7 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
-/*has nothing but debugging codes to track fragment lifecycle*/
+
 
 public class MyFragment extends Fragment {
 

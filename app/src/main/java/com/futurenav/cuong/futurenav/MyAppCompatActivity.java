@@ -12,6 +12,7 @@ import android.view.View;
 
 /**
  * Created by Cuong on 9/10/2015.
+ * To track activity's lifecycle. Other activities in the project extend this base class
  */
 public class MyAppCompatActivity extends AppCompatActivity {
 

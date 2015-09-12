@@ -14,6 +14,7 @@ public class SchoolActivity extends MyAppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_school);
+        //start service to load data from code.org the first time and load favorite school list from db
         Intent intent = new Intent(this, LoadSchoolIntentService.class);
         startService(intent);
     }
